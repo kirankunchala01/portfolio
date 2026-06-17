@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiran Kunchala | Network Engineer</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        slate: {
+                            850: '#151e2e',
+                            900: '#0f172a',
+                            950: '#020617',
+                        },
+                        cyan: {
+                            400: '#22d3ee',
+                            500: '#06b6d4',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- GSAP & ScrollTrigger -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/TextPlugin.min.js"></script>
+
+    <style>
+        body {
+            background-color: #020617; /* slate-950 */
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #06b6d4;
+            border-radius: 4px;
+        }
+
+        /* Canvas Background */
+        #network-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            opacity: 0.4;
+            pointer-events: auto; /* Allow mouse interaction */
+        }
+
+        /* Content Wrapper */
+        .content-wrapper {
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Glassmorphism utilities */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Text Gradient */
+        .text-gradient {
+            background: linear-gradient(to right, #22d3ee, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Scrollytelling Panels */
+        .panel {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Horizontal Scroll Container */
+        .projects-wrapper {
+            width: 400vw; /* 4 panels * 100vw */
+            height: 100vh;
+            display: flex;
+            flex-wrap: nowrap;
+        }
+
+        .project-panel {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        /* Timeline specific */
+        .timeline-line {
+            position: absolute;
+            left: 24px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: rgba(34, 211, 238, 0.2);
+        }
+        
+        .timeline-progress {
+            position: absolute;
+            left: 24px;
+            top: 0;
+            width: 2px;
+            background: #22d3ee;
+            height: 0%;
+            box-shadow: 0 0 10px #22d3ee;
+        }
+
+        /* Hide logic for animations */
+        .fade-up { opacity: 0; transform: translateY(50px); }
+
+        /* Loose Connection Flicker Effect */
+        @keyframes flicker {
+            0%, 100% { opacity: 1; text-shadow: none; }
+            3% { opacity: 0.4; }
+            6% { opacity: 1; text-shadow: 0 0 8px rgba(34, 211, 238, 0.6); }
+            7% { opacity: 0.4; }
+            8% { opacity: 1; text-shadow: none; }
+            9% { opacity: 1; }
+            10% { opacity: 0.1; }
+            11% { opacity: 1; }
+            50% { opacity: 1; }
+            52% { opacity: 0.3; }
+            53% { opacity: 1; text-shadow: 0 0 10px rgba(34, 211, 238, 0.8); }
+            54% { opacity: 0.3; text-shadow: none; }
+            55% { opacity: 1; }
+            80% { opacity: 1; }
+            81% { opacity: 0.5; }
+            82% { opacity: 1; }
+        }
+        .flicker-text {
+            animation: flicker 4s infinite;
+        }
+
+        /* Floating animation for education icons */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .animate-float {
+            animation: float 4s ease-in-out infinite;
+        }
+        .animate-float-delayed {
+            animation: float 4s ease-in-out 2s infinite;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-cyan-500 selection:text-white">
+
+    <!-- Interactive Network Background -->
+    <canvas id="network-canvas"></canvas>
+
+    <div class="content-wrapper">
+        
+        <!-- Navigation -->
+        <nav class="fixed top-0 left-0 w-full z-50 glass-panel border-b-0">
+            <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+                <a href="#" class="font-mono text-3xl font-bold tracking-tighter flicker-text">
+                    Kiran <span class="text-cyan-400">Kunchala</span>
+                </a>
+                <div class="hidden md:flex gap-8 text-sm font-medium tracking-wide text-slate-300">
+                    <a href="#about" class="hover:text-cyan-400 transition-colors">Architecture</a>
+                    <a href="#experience" class="hover:text-cyan-400 transition-colors">Professional Experience</a>
+                    <a href="#projects" class="hover:text-cyan-400 transition-colors">University Projects</a>
+                    <a href="#education" class="hover:text-cyan-400 transition-colors">Education</a>
+                    <a href="#resume" class="hover:text-cyan-400 transition-colors">Resume</a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Hero Section (Scrollytelling Trigger 1) -->
+        <section id="hero" class="panel flex-col justify-center items-center text-center relative pt-20">
+            <div class="hero-content max-w-4xl px-4">
+                <div class="inline-block mb-4 px-4 py-1 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 font-mono text-sm fade-up hero-anim">
+                    System Online // Connection Established
+                </div>
+                <h1 class="text-5xl md:text-7xl font-bold mb-6 tracking-tight fade-up hero-anim" style="transition-delay: 0.1s;">
+                    Network <span class="text-gradient">Engineer</span>.
+                </h1>
+                
+                <!-- Typewriter Container -->
+                <p class="text-lg md:text-xl text-slate-400 mb-10 max-w-2xl mx-auto font-light fade-up hero-anim h-20 md:h-14" style="transition-delay: 0.2s;">
+                    <span id="typewriter-text"></span><span id="cursor" class="text-cyan-400 inline-block font-bold ml-1">_</span>
+                </p>
+                
+                <div class="flex gap-4 justify-center fade-up hero-anim" style="transition-delay: 0.3s;">
+                    <a href="#experience" class="px-8 py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold rounded-lg transition-all duration-300 shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)]">
+                        Professional Experience
+                    </a>
+                </div>
+            </div>
+            
+            <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50 animate-bounce">
+                <span class="font-mono text-xs text-cyan-400">Scroll to initialize</span>
+                <i class='bx bx-chevron-down text-2xl text-cyan-400'></i>
+            </div>
+        </section>
+
+        <!-- About Section (Pinned Layout) -->
+        <section id="about" class="relative bg-slate-900/80 border-y border-slate-800">
+            <div class="about-container max-w-7xl mx-auto px-6 py-24 flex flex-col md:flex-row gap-12">
+                
+                <!-- Left Side: Pinned Canvas -->
+                <div class="w-full md:w-1/2 h-[50vh] md:h-[80vh] relative about-image-wrapper rounded-2xl overflow-hidden shadow-2xl shadow-cyan-500/10 border border-slate-700 bg-slate-950">
+                    <canvas id="architectureCanvas" class="absolute inset-0 w-full h-full"></canvas>
+                    <div class="absolute inset-0 bg-gradient-to-tr from-slate-900/80 via-transparent to-slate-900/80 z-10 pointer-events-none"></div>
+                    
+                    <div class="absolute bottom-6 left-6 z-20 glass-panel p-4 rounded-xl border border-white/10">
+                        <p class="font-mono text-cyan-400 text-sm mb-1">Current Status</p>
+                        <p class="text-white font-medium"><i class='bx bx-radar animate-spin mr-2'></i>Actively Monitoring</p>
+                        <p class="text-slate-400 text-xs mt-1">Salt Lake City, Utah Server Hub</p>
+                    </div>
+                </div>
+
+                <!-- Right Side: Scrolling Text -->
+                <div class="w-full md:w-1/2 py-10 md:py-20 about-text-content">
+                    <h2 class="text-3xl md:text-5xl font-bold mb-8">The <span class="text-cyan-400">Architecture</span></h2>
+                    
+                    <div class="space-y-12">
+                        <div class="about-block opacity-0 translate-y-10">
+                            <h3 class="text-xl font-semibold mb-3 text-white flex items-center gap-2">
+                                <i class='bx bx-server text-cyan-500'></i> Infrastructure Backbone
+                            </h3>
+                            <p class="text-slate-400 leading-relaxed">
+                                With a Master's degree in Computer Science and 4 years of dedicated experience, my expertise spans complete Layer 2/Layer 3 configuration, advanced troubleshooting, and enterprise network design.
+                            </p>
+                        </div>
+
+                        <div class="about-block opacity-0 translate-y-10">
+                            <h3 class="text-xl font-semibold mb-3 text-white flex items-center gap-2">
+                                <i class='bx bx-shield-quarter text-cyan-500'></i> Security First
+                            </h3>
+                            <p class="text-slate-400 leading-relaxed">
+                                Proven track record of independently architecting isolated network segments, enforcing strict Access Control Lists (ACLs), and eliminating bandwidth bottlenecks to ensure continuous operational uptime.
+                            </p>
+                        </div>
+
+                        <div class="about-block opacity-0 translate-y-10">
+                            <h3 class="text-xl font-semibold mb-3 text-white flex items-center gap-2">
+                                <i class='bx bx-code-alt text-cyan-500'></i> Automation & Cloud
+                            </h3>
+                            <p class="text-slate-400 leading-relaxed">
+                                Bringing the added advantage of deep Python coding knowledge and cloud system architecture (AWS/Terraform), enabling a hybrid approach to traditional network management and performance optimization.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Experience / Timeline -->
+        <section id="experience" class="py-32 relative">
+            <div class="max-w-4xl mx-auto px-6">
+                <h2 class="text-3xl md:text-5xl font-bold mb-20 text-center">Professional <span class="text-cyan-400">Experience</span></h2>
+                
+                <div class="relative experience-section">
+                    <!-- The Background Line -->
+                    <div class="timeline-line"></div>
+                    <!-- The Scrollytelling Progress Line -->
+                    <div class="timeline-progress"></div>
+
+                    <div class="space-y-24 pl-16">
+                        
+                        <!-- Job 1 -->
+                        <div class="timeline-item relative opacity-0 translate-x-10">
+                            <div class="absolute -left-[76px] top-1 w-6 h-6 rounded-full bg-slate-900 border-4 border-cyan-500 z-10 shadow-[0_0_15px_rgba(6,182,212,0.8)]"></div>
+                            <div class="glass-panel p-8 rounded-2xl">
+                                <div class="flex flex-col md:flex-row md:justify-between md:items-start mb-4 gap-4">
+                                    <div>
+                                        <h3 class="text-2xl font-bold text-white">Network Engineer</h3>
+                                        <p class="text-lg text-cyan-400 font-mono">HCLTech (Client: FLSmidth) — Salt Lake City, UT</p>
+                                    </div>
+                                    <span class="px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 rounded-full text-cyan-300 text-sm font-mono whitespace-nowrap">Jun 2024 - Present</span>
+                                </div>
+                                <ul class="space-y-3 text-slate-400">
+                                    <li class="flex gap-3"><i class='bx bx-check text-cyan-500 mt-1'></i> Configured and deployed enterprise routing/switching infrastructure across LAN/WAN environments.</li>
+                                    <li class="flex gap-3"><i class='bx bx-check text-cyan-500 mt-1'></i> Administered Layer 2/3 protocols, independently provisioning STP, VLAN trunking, and Inter-VLAN routing.</li>
+                                    <li class="flex gap-3"><i class='bx bx-check text-cyan-500 mt-1'></i> Provisioned Site-to-Site VPN tunnels and engineered Access Control Lists (ACLs) on core routers and firewalls.</li>
+                                    <li class="flex gap-3"><i class='bx bx-check text-cyan-500 mt-1'></i> Engineered QoS to prioritize critical data and enforced MAC-based port security.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Job 2 -->
+                        <div class="timeline-item relative opacity-0 translate-x-10">
+                            <div class="absolute -left-[76px] top-1 w-6 h-6 rounded-full bg-slate-900 border-4 border-slate-600 z-10 node-dot"></div>
+                            <div class="glass-panel p-8 rounded-2xl hover:border-cyan-500/30 transition-colors">
+                                <div class="flex flex-col md:flex-row md:justify-between md:items-start mb-4 gap-4">
+                                    <div>
+                                        <h3 class="text-2xl font-bold text-white">Jr. Network Engineer</h3>
+                                        <p class="text-lg text-cyan-400 font-mono">Wipro — Hyderabad, India</p>
+                                    </div>
+                                    <span class="px-3 py-1 bg-slate-800 border border-slate-700 rounded-full text-slate-300 text-sm font-mono whitespace-nowrap">Jul 2021 - Jun 2023</span>
+                                </div>
+                                <ul class="space-y-3 text-slate-400">
+                                    <li class="flex gap-3"><i class='bx bx-check text-cyan-500 mt-1'></i> Engineered Layer 2 switching topologies, configuring 802.1Q trunking and VLAN tagging.</li>
+                                    <li class="flex gap-3"><i class='bx bx-check text-cyan-500 mt-1'></i> Designed standard and extended ACLs directly on routing hardware.</li>
+                                    <li class="flex gap-3"><i class='bx bx-check text-cyan-500 mt-1'></i> Executed deep-dive diagnostics resolving faults (ARP, DHCP, DNS) and utilized Wireshark for packet analysis.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Job 3 -->
+                        <div class="timeline-item relative opacity-0 translate-x-10">
+                            <div class="absolute -left-[76px] top-1 w-6 h-6 rounded-full bg-slate-900 border-4 border-slate-600 z-10 node-dot"></div>
+                            <div class="glass-panel p-8 rounded-2xl hover:border-cyan-500/30 transition-colors">
+                                <div class="flex flex-col md:flex-row md:justify-between md:items-start mb-4 gap-4">
+                                    <div>
+                                        <h3 class="text-2xl font-bold text-white">AI Annotator (Independent Contract)</h3>
+                                        <p class="text-lg text-cyan-400 font-mono">Handshake AI — Remote, USA</p>
+                                    </div>
+                                    <span class="px-3 py-1 bg-slate-800 border border-slate-700 rounded-full text-slate-300 text-sm font-mono whitespace-nowrap">Sep 2025 - Nov 2025</span>
+                                </div>
+                                <ul class="space-y-3 text-slate-400">
+                                    <li class="flex gap-3"><i class='bx bx-check text-cyan-500 mt-1'></i> Contributed to data annotation and validation to support AI model training.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Job 4 -->
+                        <div class="timeline-item relative opacity-0 translate-x-10">
+                            <div class="absolute -left-[76px] top-1 w-6 h-6 rounded-full bg-slate-900 border-4 border-slate-600 z-10 node-dot"></div>
+                            <div class="glass-panel p-8 rounded-2xl hover:border-cyan-500/30 transition-colors">
+                                <div class="flex flex-col md:flex-row md:justify-between md:items-start mb-4 gap-4">
+                                    <div>
+                                        <h3 class="text-2xl font-bold text-white">Graduate Assistant (Python)</h3>
+                                        <p class="text-lg text-cyan-400 font-mono">Roosevelt University — Chicago, IL</p>
+                                    </div>
+                                    <span class="px-3 py-1 bg-slate-800 border border-slate-700 rounded-full text-slate-300 text-sm font-mono whitespace-nowrap">Aug 2025 - Dec 2025</span>
+                                </div>
+                                <ul class="space-y-3 text-slate-400">
+                                    <li class="flex gap-3"><i class='bx bx-check text-cyan-500 mt-1'></i> Mentored 40+ students in Python programming with a focus on backend logic, data structures, and REST APIs.</li>
+                                    <li class="flex gap-3"><i class='bx bx-check text-cyan-500 mt-1'></i> Supported development of reliable codebases emphasizing modular design and debugging.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Projects (Horizontal Scroll) -->
+        <section id="projects" class="overflow-hidden bg-slate-900/50 border-t border-slate-800">
+            <!-- This container will be pinned by GSAP while the inner wrapper slides horizontally -->
+            <div id="projects-container" class="h-screen w-full relative">
+                
+                <div class="absolute top-20 left-10 md:left-20 z-20">
+                    <h2 class="text-3xl md:text-5xl font-bold">University <span class="text-cyan-400">Projects</span></h2>
+                    <p class="font-mono text-slate-400 mt-2">Scroll horizontally >></p>
+                </div>
+
+                <div class="projects-wrapper">
+                    
+                    <!-- Panel 1 -->
+                    <div class="project-panel">
+                        <div class="max-w-6xl w-full flex flex-col lg:flex-row gap-12 items-center">
+                            <div class="w-full lg:w-1/2">
+                                <!-- GLOBE ANIMATION CONTAINER -->
+                                <div class="w-full h-[300px] lg:h-[400px] rounded-xl shadow-2xl shadow-cyan-500/20 border border-slate-700 bg-slate-950 relative overflow-hidden flex items-center justify-center">
+                                    <canvas id="globeCanvas" class="absolute inset-0 w-full h-full"></canvas>
+                                    <div class="absolute bottom-4 left-4 z-10">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></div>
+                                            <span class="text-cyan-500 font-mono text-xs">Global Node Active</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="w-full lg:w-1/2 glass-panel p-10 rounded-2xl">
+                                <span class="font-mono text-cyan-400 mb-2 block">01 // Architecture</span>
+                                <h3 class="text-4xl font-bold text-white mb-4">Cloud-Based Scalable Data System</h3>
+                                <p class="text-slate-400 text-lg mb-6 leading-relaxed">Engineered a secure cloud network topology using AWS VPCs. Provisioned Security Groups and NACLs to enforce traffic policies. Deployed Infrastructure as Code (IaC) utilizing Terraform for automated provisioning.</p>
+                                <div class="flex gap-3 flex-wrap">
+                                    <span class="px-3 py-1 bg-slate-800 rounded text-sm font-mono text-cyan-300">AWS VPC</span>
+                                    <span class="px-3 py-1 bg-slate-800 rounded text-sm font-mono text-cyan-300">Terraform</span>
+                                    <span class="px-3 py-1 bg-slate-800 rounded text-sm font-mono text-cyan-300">REST APIs</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel 2 -->
+                    <div class="project-panel">
+                        <div class="max-w-6xl w-full flex flex-col lg:flex-row gap-12 items-center">
+                            <div class="w-full lg:w-1/2">
+                                <!-- LIVE STATS ANIMATION CONTAINER -->
+                                <div class="w-full h-[300px] lg:h-[400px] rounded-xl shadow-2xl shadow-cyan-500/20 border border-slate-700 bg-slate-950 relative overflow-hidden flex flex-col p-4">
+                                    <div class="grid grid-cols-2 gap-4 mb-4 relative z-10">
+                                        <div class="bg-slate-900/80 border border-slate-800 p-3 rounded-lg text-center">
+                                            <span class="text-xs text-slate-400 font-mono block mb-1">INBOUND (Gbps)</span>
+                                            <div id="stat-bw" class="text-2xl text-cyan-400 font-mono font-bold">14.2</div>
+                                        </div>
+                                        <div class="bg-slate-900/80 border border-slate-800 p-3 rounded-lg text-center">
+                                            <span class="text-xs text-slate-400 font-mono block mb-1">LATENCY (ms)</span>
+                                            <div id="stat-lat" class="text-2xl text-purple-400 font-mono font-bold">12</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow relative w-full border border-slate-800/50 rounded-lg overflow-hidden bg-slate-900/30">
+                                        <canvas id="chartCanvas" class="absolute inset-0 w-full h-full"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="w-full lg:w-1/2 glass-panel p-10 rounded-2xl">
+                                <span class="font-mono text-cyan-400 mb-2 block">02 // Telemetry</span>
+                                <h3 class="text-4xl font-bold text-white mb-4">Monitoring & Alerting Platform</h3>
+                                <p class="text-slate-400 text-lg mb-6 leading-relaxed">Designed a network monitoring architecture tracking real-time bandwidth and latency. Developed Python automation scripts to poll hardware and engineered threshold-based alerting mechanisms to detect anomalies.</p>
+                                <div class="flex gap-3 flex-wrap">
+                                    <span class="px-3 py-1 bg-slate-800 rounded text-sm font-mono text-cyan-300">Python</span>
+                                    <span class="px-3 py-1 bg-slate-800 rounded text-sm font-mono text-cyan-300">SNMP</span>
+                                    <span class="px-3 py-1 bg-slate-800 rounded text-sm font-mono text-cyan-300">Log Analysis</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel 3 -->
+                    <div class="project-panel">
+                        <div class="max-w-6xl w-full flex flex-col lg:flex-row gap-12 items-center">
+                            <div class="w-full lg:w-1/2">
+                                <!-- MATRIX CODE ANIMATION CONTAINER -->
+                                <div class="w-full h-[300px] lg:h-[400px] rounded-xl shadow-2xl shadow-cyan-500/20 border border-slate-700 bg-black relative overflow-hidden">
+                                    <canvas id="matrixCanvas" class="absolute inset-0 w-full h-full"></canvas>
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+                                    <div class="absolute top-4 right-4 bg-black/60 px-2 py-1 rounded border border-green-500/30 backdrop-blur-sm">
+                                        <span class="text-green-500 font-mono text-xs">PACKET_SNIFFING_ACTIVE</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="w-full lg:w-1/2 glass-panel p-10 rounded-2xl">
+                                <span class="font-mono text-cyan-400 mb-2 block">03 // Diagnostics</span>
+                                <h3 class="text-4xl font-bold text-white mb-4">Traffic & Health Analysis Tool</h3>
+                                <p class="text-slate-400 text-lg mb-6 leading-relaxed">Conducted rigorous packet-level inspection isolating anomalous data flows. Built automated data pipelines to capture network telemetry, significantly reducing mean time to resolution (MTTR) for outages.</p>
+                                <div class="flex gap-3 flex-wrap">
+                                    <span class="px-3 py-1 bg-slate-800 rounded text-sm font-mono text-cyan-300">Wireshark</span>
+                                    <span class="px-3 py-1 bg-slate-800 rounded text-sm font-mono text-cyan-300">Data Pipelines</span>
+                                    <span class="px-3 py-1 bg-slate-800 rounded text-sm font-mono text-cyan-300">Stress Testing</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- End Buffer Panel -->
+                    <div class="project-panel" style="width: 100vw;">
+                        <div class="text-center">
+                            <i class='bx bx-check-shield text-7xl text-cyan-500 mb-6'></i>
+                            <h3 class="text-3xl font-bold text-white">All systems operational.</h3>
+                            <p class="text-slate-400 mt-4">Continue scrolling for credentials.</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Education Section -->
+        <section id="education" class="py-32 relative bg-slate-950">
+            <div class="max-w-4xl mx-auto px-6">
+                <h2 class="text-3xl md:text-5xl font-bold mb-16 text-center">Academic <span class="text-cyan-400">Background</span></h2>
+                
+                <div class="space-y-8">
+                    <!-- Master's -->
+                    <div class="glass-panel p-8 rounded-2xl border-l-4 border-l-cyan-500 hover:border-cyan-400 transition-colors edu-anim opacity-0 translate-y-10">
+                        <div class="flex flex-col md:flex-row gap-6 items-center md:items-start">
+                            <!-- Cartoon Icon -->
+                            <div class="shrink-0 w-24 h-24 bg-cyan-500/10 rounded-2xl p-4 flex items-center justify-center border border-cyan-500/20 shadow-inner animate-float">
+                                <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]">
+                                    <!-- Graduation Cap -->
+                                    <path d="M10,40 L50,20 L90,40 L50,60 Z" fill="#22d3ee" />
+                                    <path d="M25,50 L25,75 Q50,90 75,75 L75,50 L50,65 Z" fill="#06b6d4" />
+                                    <path d="M85,45 L85,70" stroke="#f8fafc" stroke-width="4" stroke-linecap="round"/>
+                                    <circle cx="85" cy="75" r="5" fill="#f8fafc" />
+                                    <text x="50" y="52" font-family="monospace" font-size="14" fill="#0f172a" text-anchor="middle" font-weight="bold">M.S.</text>
+                                </svg>
+                            </div>
+                            <div class="flex-grow flex flex-col md:flex-row md:justify-between md:items-start gap-4 text-center md:text-left">
+                                <div>
+                                    <h3 class="text-2xl font-bold text-white mb-1">Master of Science, Computer Science</h3>
+                                    <p class="text-lg text-cyan-400 font-mono">Roosevelt University — Chicago, USA</p>
+                                </div>
+                                <span class="px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 rounded-full text-cyan-300 text-sm font-mono whitespace-nowrap">Aug 2023 - Dec 2024</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bachelor's -->
+                    <div class="glass-panel p-8 rounded-2xl border-l-4 border-l-blue-500 hover:border-blue-400 transition-colors edu-anim opacity-0 translate-y-10">
+                        <div class="flex flex-col md:flex-row gap-6 items-center md:items-start">
+                            <!-- Cartoon Icon -->
+                            <div class="shrink-0 w-24 h-24 bg-blue-500/10 rounded-2xl p-4 flex items-center justify-center border border-blue-500/20 shadow-inner animate-float-delayed">
+                                <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]">
+                                    <!-- Laptop / Code -->
+                                    <rect x="15" y="25" width="70" height="45" rx="5" fill="#3b82f6" />
+                                    <rect x="20" y="30" width="60" height="35" rx="2" fill="#0f172a" />
+                                    <path d="M10,75 L90,75 L95,85 L5,85 Z" fill="#60a5fa" />
+                                    <text x="35" y="55" font-family="monospace" font-size="20" fill="#22d3ee" font-weight="bold">{ }</text>
+                                    <text x="50" y="82" font-family="sans-serif" font-size="6" fill="#0f172a" text-anchor="middle" font-weight="bold">B.Tech</text>
+                                </svg>
+                            </div>
+                            <div class="flex-grow flex flex-col md:flex-row md:justify-between md:items-start gap-4 text-center md:text-left">
+                                <div>
+                                    <h3 class="text-2xl font-bold text-white mb-1">Bachelor of Technology, Computer Science</h3>
+                                    <p class="text-lg text-blue-400 font-mono">Tirumala Engineering College - JNTUK — India</p>
+                                </div>
+                                <span class="px-3 py-1 bg-blue-500/10 border border-blue-500/30 rounded-full text-blue-300 text-sm font-mono whitespace-nowrap">Jun 2020 - May 2023</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Diploma -->
+                    <div class="glass-panel p-8 rounded-2xl border-l-4 border-l-purple-500 hover:border-purple-400 transition-colors edu-anim opacity-0 translate-y-10">
+                        <div class="flex flex-col md:flex-row gap-6 items-center md:items-start">
+                            <!-- Cartoon Icon -->
+                            <div class="shrink-0 w-24 h-24 bg-purple-500/10 rounded-2xl p-4 flex items-center justify-center border border-purple-500/20 shadow-inner animate-float">
+                                <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]">
+                                    <!-- Microchip -->
+                                    <rect x="25" y="25" width="50" height="50" rx="8" fill="#a855f7" />
+                                    <rect x="35" y="35" width="30" height="30" rx="4" fill="#0f172a" />
+                                    <path d="M20,35 L25,35 M20,50 L25,50 M20,65 L25,65 M80,35 L75,35 M80,50 L75,50 M80,65 L75,65 M35,20 L35,25 M50,20 L50,25 M65,20 L65,25 M35,80 L35,75 M50,80 L50,75 M65,80 L65,75" stroke="#d8b4fe" stroke-width="4" stroke-linecap="round"/>
+                                    <circle cx="50" cy="50" r="5" fill="#c084fc" />
+                                </svg>
+                            </div>
+                            <div class="flex-grow flex flex-col md:flex-row md:justify-between md:items-start gap-4 text-center md:text-left">
+                                <div>
+                                    <h3 class="text-2xl font-bold text-white mb-1">Diploma in Electronics & Communication Eng.</h3>
+                                    <p class="text-lg text-purple-400 font-mono">CR Polytechnic College — India</p>
+                                </div>
+                                <span class="px-3 py-1 bg-purple-500/10 border border-purple-500/30 rounded-full text-purple-300 text-sm font-mono whitespace-nowrap">Jun 2017 - May 2020</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Skills Matrix & Resume -->
+        <section id="resume" class="py-32 relative border-t border-slate-800">
+            <div class="max-w-7xl mx-auto px-6">
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                    
+                    <!-- Left: Skills Matrix -->
+                    <div>
+                        <h2 class="text-3xl md:text-5xl font-bold mb-8">Technical <span class="text-cyan-400">Matrix</span></h2>
+                        
+                        <div class="space-y-6">
+                            <div class="glass-panel p-6 rounded-xl border-l-4 border-l-cyan-500">
+                                <h4 class="font-bold text-lg mb-2">Protocols & Routing</h4>
+                                <p class="text-slate-400 font-mono text-sm">TCP/IP, OSPF, STP, DHCP, NAT, VLSM, 802.1Q Trunking, Cisco CLI.</p>
+                            </div>
+                            <div class="glass-panel p-6 rounded-xl border-l-4 border-l-blue-500">
+                                <h4 class="font-bold text-lg mb-2">Security Frameworks</h4>
+                                <p class="text-slate-400 font-mono text-sm">ACLs, Firewalls, Site-to-Site VPN, Remote Access VPN, Port Security.</p>
+                            </div>
+                            <div class="glass-panel p-6 rounded-xl border-l-4 border-l-purple-500">
+                                <h4 class="font-bold text-lg mb-2">Automation & Tools</h4>
+                                <p class="text-slate-400 font-mono text-sm">Python, REST APIs, Terraform, AWS, Wireshark, SNMP.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Resume Download -->
+                    <div class="glass-panel p-12 rounded-3xl text-center border border-slate-700 relative overflow-hidden group">
+                        <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-blue-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                        
+                        <i class='bx bxs-file-pdf text-6xl text-cyan-400 mb-6'></i>
+                        <h3 class="text-2xl font-bold mb-4 text-white relative z-10">Complete Profile</h3>
+                        <p class="text-slate-400 mb-8 relative z-10">
+                            Download my full resume for a comprehensive overview of my academic background (M.S. in Computer Science) and engineering experience.
+                        </p>
+                        
+                        <a href="Kiran Kunchala_Network engineer.pdf" target="_blank" class="inline-flex items-center gap-2 px-8 py-3 bg-white text-slate-900 font-bold rounded-lg hover:bg-cyan-400 transition-colors relative z-10">
+                            <i class='bx bx-download'></i> Extract Documentation (.PDF)
+                        </a>
+
+                        <div class="mt-8 pt-6 border-t border-slate-700/50 flex items-center justify-center gap-3 relative z-10">
+                            <i class='bx bx-badge-check text-cyan-500 text-2xl'></i>
+                            <p class="text-sm text-slate-300 font-mono text-left">
+                                <strong class="text-white block">Active Certification:</strong>
+                                Pursuing Cisco Certified Network Associate (CCNA)
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="py-20 bg-slate-900 border-t border-slate-800">
+            <div class="max-w-4xl mx-auto px-6 text-center">
+                <h2 class="text-3xl font-bold mb-10">Open a <span class="text-cyan-400">Connection</span></h2>
+                
+                <div class="flex flex-wrap justify-center gap-6 mb-12">
+                    <a href="mailto:kkiran0809@gmail.com" class="glass-panel px-6 py-4 rounded-xl hover:border-cyan-500/50 transition-colors flex items-center gap-3 text-slate-300 hover:text-cyan-400">
+                        <i class='bx bx-envelope text-2xl'></i> kkiran0809@gmail.com
+                    </a>
+                    <a href="mailto:kirankunchala01@gmail.com" class="glass-panel px-6 py-4 rounded-xl hover:border-cyan-500/50 transition-colors flex items-center gap-3 text-slate-300 hover:text-cyan-400">
+                        <i class='bx bx-envelope text-2xl'></i> kirankunchala01@gmail.com
+                    </a>
+                    <a href="tel:3128660860" class="glass-panel px-6 py-4 rounded-xl hover:border-cyan-500/50 transition-colors flex items-center gap-3 text-slate-300 hover:text-cyan-400">
+                        <i class='bx bx-phone text-2xl'></i> (312) 866-0860
+                    </a>
+                    <a href="https://www.linkedin.com/in/kirankunchala01/" target="_blank" class="glass-panel px-6 py-4 rounded-xl hover:border-cyan-500/50 transition-colors flex items-center gap-3 text-slate-300 hover:text-cyan-400">
+                        <i class='bx bxl-linkedin text-2xl'></i> LinkedIn Profile
+                    </a>
+                    <div class="glass-panel px-6 py-4 rounded-xl flex items-center gap-3 text-slate-300">
+                        <i class='bx bx-map text-2xl text-cyan-600'></i> Salt Lake City, UT
+                    </div>
+                </div>
+
+                <p class="text-slate-500 text-sm font-mono">&copy; 2026 Kiran Kunchala. Built for high availability.</p>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // --- 1. Interactive Network Canvas Animation ---
+        const canvas = document.getElementById('network-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let particles = [];
+        const connectionDistance = 150;
+        let mouse = { x: null, y: null };
+
+        function initCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', () => {
+            initCanvas();
+            createParticles();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 1;
+                this.vy = (Math.random() - 0.5) * 1;
+                this.radius = Math.random() * 2 + 1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Bounce off edges
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+
+                // Mouse interaction (repel)
+                if (mouse.x != null) {
+                    let dx = mouse.x - this.x;
+                    let dy = mouse.y - this.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < 100) {
+                        this.x -= dx * 0.05;
+                        this.y -= dy * 0.05;
+                    }
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = '#06b6d4';
+                ctx.fill();
+            }
+        }
+
+        function createParticles() {
+            particles = [];
+            // Amount of particles based on screen size
+            let numParticles = Math.floor((width * height) / 15000);
+            for (let i = 0; i < numParticles; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animateCanvas() {
+            ctx.clearRect(0, 0, width, height);
+            
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+
+                // Draw lines between nearby nodes
+                for (let j = i + 1; j < particles.length; j++) {
+                    let dx = particles[i].x - particles[j].x;
+                    let dy = particles[i].y - particles[j].y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < connectionDistance) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(6, 182, 212, ${1 - distance/connectionDistance})`;
+                        ctx.lineWidth = 1;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateCanvas);
+        }
+
+        initCanvas();
+        createParticles();
+        animateCanvas();
+
+
+        // --- 2. GSAP Scrollytelling Animations ---
+        gsap.registerPlugin(ScrollTrigger, TextPlugin);
+
+        // Hero Typewriter Animation
+        const typewriterContent = "Hi, I'm Kiran Kunchala. Infrastructure specialist with 4+ years of experience bridging traditional enterprise networking and automated cloud architectures.";
+        
+        // Blink cursor infinitely
+        gsap.to("#cursor", {
+            opacity: 0,
+            ease: "power2.inOut",
+            repeat: -1,
+            yoyo: true,
+            duration: 0.4
+        });
+
+        // Type out text, wait, erase, and repeat
+        const tl = gsap.timeline({ repeat: -1 });
+        
+        tl.to("#typewriter-text", {
+            text: {
+                value: typewriterContent,
+                delimiter: ""
+            },
+            duration: 3.5, 
+            ease: "none",
+            delay: 1
+        })
+        .to({}, {duration: 4}) // Wait for 4 seconds
+        .set("#typewriter-text", {  // Use .set for instant change
+            text: {
+                value: "",
+                delimiter: ""
+            }
+        });
+
+        // Hero initial load animation
+        gsap.to(".hero-anim", {
+            y: 0,
+            opacity: 1,
+            duration: 1,
+            stagger: 0.2,
+            ease: "power3.out"
+        });
+
+        // About Section: Pin the image while text scrolls
+        ScrollTrigger.create({
+            trigger: ".about-container",
+            start: "top 10%",
+            end: "bottom 80%",
+            pin: ".about-image-wrapper",
+        });
+
+        // About text fade in as you scroll
+        gsap.utils.toArray(".about-block").forEach(block => {
+            gsap.to(block, {
+                y: 0,
+                opacity: 1,
+                scrollTrigger: {
+                    trigger: block,
+                    start: "top 80%",
+                    end: "top 50%",
+                    scrub: 1
+                }
+            });
+        });
+
+        // Experience Timeline: The node traveling down
+        gsap.to(".timeline-progress", {
+            height: "100%",
+            ease: "none",
+            scrollTrigger: {
+                trigger: ".experience-section",
+                start: "top center",
+                end: "bottom center",
+                scrub: true
+            }
+        });
+
+        // Experience items fade in and dots light up
+        gsap.utils.toArray(".timeline-item").forEach(item => {
+            let dot = item.querySelector(".node-dot");
+            
+            // Fade in item
+            gsap.to(item, {
+                x: 0,
+                opacity: 1,
+                scrollTrigger: {
+                    trigger: item,
+                    start: "top 70%",
+                    end: "top 40%",
+                    scrub: 1
+                }
+            });
+
+            // Light up dot if it has the node-dot class (first one is already lit)
+            if(dot) {
+                gsap.to(dot, {
+                    borderColor: "#06b6d4",
+                    boxShadow: "0 0 15px rgba(6,182,212,0.8)",
+                    scrollTrigger: {
+                        trigger: item,
+                        start: "top 50%", // When line hits it
+                        toggleActions: "play none none reverse"
+                    }
+                });
+            }
+        });
+
+        // Projects: Horizontal Scroll
+        let projectSections = gsap.utils.toArray(".project-panel");
+        let projectWrapper = document.querySelector(".projects-wrapper");
+        
+        gsap.to(projectSections, {
+            xPercent: -100 * (projectSections.length - 1),
+            ease: "none",
+            scrollTrigger: {
+                trigger: "#projects-container",
+                pin: true,
+                scrub: 1,
+                snap: 1 / (projectSections.length - 1),
+                end: () => "+=" + projectWrapper.offsetWidth
+            }
+        });
+
+        // Education section fade up
+        gsap.utils.toArray(".edu-anim").forEach(card => {
+            gsap.to(card, {
+                y: 0,
+                opacity: 1,
+                duration: 0.8,
+                ease: "power3.out",
+                scrollTrigger: {
+                    trigger: card,
+                    start: "top 85%",
+                }
+            });
+        });
+
+        // --- 3. Project Visual Animations ---
+
+        // Utility to resize canvases
+        function resizeCanvas(canvas) {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            return { w: rect.width, h: rect.height };
+        }
+
+        // --- Project 1: Rotating Globe ---
+        const globeCanvas = document.getElementById('globeCanvas');
+        const gCtx = globeCanvas.getContext('2d');
+        let globeNodes = [];
+        const numGlobeNodes = 150;
+        let globeRotX = 0;
+        let globeRotY = 0;
+
+        // Fibonacci sphere distribution for even point spacing
+        for(let i=0; i<numGlobeNodes; i++) {
+            let phi = Math.acos(-1 + (2 * i) / numGlobeNodes);
+            let theta = Math.sqrt(numGlobeNodes * Math.PI) * phi;
+            globeNodes.push({
+                x: Math.cos(theta) * Math.sin(phi),
+                y: Math.sin(theta) * Math.sin(phi),
+                z: Math.cos(phi)
+            });
+        }
+
+        function drawGlobe() {
+            if(!globeCanvas.offsetParent) return; // skip if hidden
+            let { w, h } = resizeCanvas(globeCanvas);
+            gCtx.clearRect(0, 0, w, h);
+            
+            let radius = Math.min(w, h) * 0.4;
+            let cx = w / 2;
+            let cy = h / 2;
+
+            globeRotY += 0.005;
+            globeRotX += 0.002;
+
+            let projectedNodes = [];
+
+            for(let i=0; i<numGlobeNodes; i++) {
+                let node = globeNodes[i];
+                
+                // Rotate Y
+                let x1 = node.x * Math.cos(globeRotY) - node.z * Math.sin(globeRotY);
+                let z1 = node.z * Math.cos(globeRotY) + node.x * Math.sin(globeRotY);
+                
+                // Rotate X
+                let y2 = node.y * Math.cos(globeRotX) - z1 * Math.sin(globeRotX);
+                let z2 = z1 * Math.cos(globeRotX) + node.y * Math.sin(globeRotX);
+                let x2 = x1;
+
+                // Simple Orthographic projection
+                let px = cx + x2 * radius;
+                let py = cy + y2 * radius;
+                
+                projectedNodes.push({px, py, z: z2});
+
+                // Draw dots (fade back ones)
+                let alpha = (z2 + 1) / 2; // 0 to 1 based on depth
+                gCtx.beginPath();
+                gCtx.arc(px, py, 2, 0, Math.PI * 2);
+                gCtx.fillStyle = `rgba(6, 182, 212, ${alpha * 0.8})`;
+                gCtx.fill();
+            }
+
+            // Draw connecting lines
+            gCtx.lineWidth = 0.5;
+            for(let i=0; i<numGlobeNodes; i++) {
+                for(let j=i+1; j<numGlobeNodes; j++) {
+                    let dx = globeNodes[i].x - globeNodes[j].x;
+                    let dy = globeNodes[i].y - globeNodes[j].y;
+                    let dz = globeNodes[i].z - globeNodes[j].z;
+                    let dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
+                    
+                    if(dist < 0.3) {
+                        let n1 = projectedNodes[i];
+                        let n2 = projectedNodes[j];
+                        let alpha = ((n1.z + n2.z + 2) / 4) * 0.4; // depth based opacity
+                        
+                        gCtx.beginPath();
+                        gCtx.strokeStyle = `rgba(34, 211, 238, ${alpha})`;
+                        gCtx.moveTo(n1.px, n1.py);
+                        gCtx.lineTo(n2.px, n2.py);
+                        gCtx.stroke();
+                    }
+                }
+            }
+        }
+
+        // --- Project 2: Live Stats ---
+        const chartCanvas = document.getElementById('chartCanvas');
+        const cCtx = chartCanvas.getContext('2d');
+        const statBw = document.getElementById('stat-bw');
+        const statLat = document.getElementById('stat-lat');
+        
+        let bwData = new Array(50).fill(15);
+        let latData = new Array(50).fill(10);
+        let statFrameCounter = 0;
+
+        function drawChart() {
+            if(!chartCanvas.offsetParent) return;
+            let { w, h } = resizeCanvas(chartCanvas);
+            cCtx.clearRect(0, 0, w, h);
+
+            // Update data every few frames
+            statFrameCounter++;
+            if(statFrameCounter > 5) {
+                statFrameCounter = 0;
+                
+                // shift and add new random data
+                bwData.shift();
+                let nextBw = bwData[bwData.length-1] + (Math.random() - 0.5) * 2;
+                nextBw = Math.max(8, Math.min(nextBw, 20)); // clamp
+                bwData.push(nextBw);
+                statBw.innerText = nextBw.toFixed(1);
+
+                latData.shift();
+                let nextLat = latData[latData.length-1] + (Math.random() - 0.5) * 4;
+                nextLat = Math.max(5, Math.min(nextLat, 40));
+                latData.push(nextLat);
+                statLat.innerText = Math.round(nextLat);
+            }
+
+            let slice = w / (bwData.length - 1);
+
+            // Draw Grid
+            cCtx.strokeStyle = "rgba(255,255,255,0.05)";
+            cCtx.lineWidth = 1;
+            cCtx.beginPath();
+            for(let i=0; i<w; i+=slice*5) { cCtx.moveTo(i, 0); cCtx.lineTo(i, h); }
+            for(let i=0; i<h; i+=h/4) { cCtx.moveTo(0, i); cCtx.lineTo(w, i); }
+            cCtx.stroke();
+
+            // Draw Bandwidth Line (Cyan)
+            cCtx.beginPath();
+            cCtx.strokeStyle = "#22d3ee"; // cyan-400
+            cCtx.lineWidth = 2;
+            for(let i=0; i<bwData.length; i++) {
+                let x = i * slice;
+                let y = h - ((bwData[i] / 25) * h); // max 25Gbps
+                if(i===0) cCtx.moveTo(x, y);
+                else cCtx.lineTo(x, y);
+            }
+            cCtx.stroke();
+            
+            // Draw Latency Line (Purple)
+            cCtx.beginPath();
+            cCtx.strokeStyle = "#c084fc"; // purple-400
+            cCtx.lineWidth = 2;
+            for(let i=0; i<latData.length; i++) {
+                let x = i * slice;
+                let y = h - ((latData[i] / 50) * h); // max 50ms
+                if(i===0) cCtx.moveTo(x, y);
+                else cCtx.lineTo(x, y);
+            }
+            cCtx.stroke();
+        }
+
+        // --- Project 3: Matrix Code ---
+        const matrixCanvas = document.getElementById('matrixCanvas');
+        const mCtx = matrixCanvas.getContext('2d');
+        
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*";
+        const fontSize = 14;
+        let columns = 0;
+        let drops = [];
+
+        function initMatrix() {
+            let { w } = resizeCanvas(matrixCanvas);
+            columns = Math.floor(w / fontSize);
+            drops = [];
+            for (let i = 0; i < columns; i++) {
+                drops[i] = Math.random() * -100; // start off-screen randomly
+            }
+        }
+        initMatrix();
+        window.addEventListener('resize', initMatrix);
+
+        function drawMatrix() {
+            if(!matrixCanvas.offsetParent) return;
+            let { w, h } = resizeCanvas(matrixCanvas);
+            
+            // Semi-transparent black to create fade effect
+            mCtx.fillStyle = "rgba(0, 0, 0, 0.1)";
+            mCtx.fillRect(0, 0, w, h);
+
+            mCtx.fillStyle = "#22c55e"; // green-500
+            mCtx.font = fontSize + "px monospace";
+
+            for (let i = 0; i < drops.length; i++) {
+                let text = chars[Math.floor(Math.random() * chars.length)];
+                
+                // Draw character
+                let x = i * fontSize;
+                let y = drops[i] * fontSize;
+                
+                // Highlight head of the stream
+                if(Math.random() > 0.9) mCtx.fillStyle = "#fff";
+                else mCtx.fillStyle = "#22c55e";
+                
+                mCtx.fillText(text, x, y);
+
+                // Reset drop to top randomly
+                if (y > h && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+
+        // --- Architecture Section: Network Data Flow ---
+        const archCanvas = document.getElementById('architectureCanvas');
+        const aCtx = archCanvas.getContext('2d');
+        let archNodes = [];
+        let archLinks = [];
+        let archPackets = [];
+
+        function initArch() {
+            if(!archCanvas) return;
+            let { w, h } = resizeCanvas(archCanvas);
+            archNodes = [];
+            archLinks = [];
+            archPackets = [];
+
+            // Create nodes
+            const numNodes = 30;
+            for(let i=0; i<numNodes; i++) {
+                archNodes.push({
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    pulse: Math.random() * Math.PI * 2
+                });
+            }
+
+            // Create links between close nodes
+            for(let i=0; i<numNodes; i++) {
+                for(let j=i+1; j<numNodes; j++) {
+                    let dx = archNodes[i].x - archNodes[j].x;
+                    let dy = archNodes[i].y - archNodes[j].y;
+                    let dist = Math.sqrt(dx*dx + dy*dy);
+                    if(dist < (Math.min(w, h) * 0.35)) {
+                        archLinks.push({ source: i, target: j });
+                    }
+                }
+            }
+        }
+        initArch();
+        window.addEventListener('resize', initArch);
+
+        function drawArch() {
+            if(!archCanvas.offsetParent) return;
+            let { w, h } = resizeCanvas(archCanvas);
+            
+            // Fading trail effect
+            aCtx.fillStyle = 'rgba(2, 6, 23, 0.3)'; // slate-950
+            aCtx.fillRect(0, 0, w, h);
+
+            // Draw Links
+            aCtx.lineWidth = 1;
+            aCtx.strokeStyle = 'rgba(34, 211, 238, 0.1)';
+            archLinks.forEach(link => {
+                let n1 = archNodes[link.source];
+                let n2 = archNodes[link.target];
+                aCtx.beginPath();
+                aCtx.moveTo(n1.x, n1.y);
+                aCtx.lineTo(n2.x, n2.y);
+                aCtx.stroke();
+            });
+
+            // Draw Nodes
+            archNodes.forEach(node => {
+                node.pulse += 0.05;
+                let r = 2 + Math.sin(node.pulse) * 1;
+                
+                aCtx.beginPath();
+                aCtx.arc(node.x, node.y, r, 0, Math.PI * 2);
+                aCtx.fillStyle = '#06b6d4';
+                aCtx.fill();
+                
+                // Outer glow
+                aCtx.beginPath();
+                aCtx.arc(node.x, node.y, r + 4, 0, Math.PI * 2);
+                aCtx.fillStyle = `rgba(6, 182, 212, ${0.1 + Math.sin(node.pulse)*0.1})`;
+                aCtx.fill();
+            });
+
+            // Spawn Data Packets
+            if(Math.random() < 0.3 && archLinks.length > 0) {
+                let link = archLinks[Math.floor(Math.random() * archLinks.length)];
+                let reverse = Math.random() > 0.5;
+                archPackets.push({
+                    source: reverse ? link.target : link.source,
+                    target: reverse ? link.source : link.target,
+                    progress: 0,
+                    speed: 0.01 + (Math.random() * 0.02)
+                });
+            }
+
+            // Update and Draw Packets
+            for(let i = archPackets.length - 1; i >= 0; i--) {
+                let p = archPackets[i];
+                p.progress += p.speed;
+                
+                if(p.progress >= 1) {
+                    archPackets.splice(i, 1);
+                    continue;
+                }
+                
+                let n1 = archNodes[p.source];
+                let n2 = archNodes[p.target];
+                let px = n1.x + (n2.x - n1.x) * p.progress;
+                let py = n1.y + (n2.y - n1.y) * p.progress;
+
+                aCtx.beginPath();
+                aCtx.arc(px, py, 2, 0, Math.PI * 2);
+                aCtx.fillStyle = '#fff'; // white core
+                aCtx.shadowBlur = 10;
+                aCtx.shadowColor = '#22d3ee'; // cyan glow
+                aCtx.fill();
+                aCtx.shadowBlur = 0; // reset for other elements
+            }
+        }
+
+        // --- Master Animation Loop for all Visuals ---
+        function animateVisuals() {
+            drawGlobe();
+            drawChart();
+            drawMatrix();
+            drawArch();
+            requestAnimationFrame(animateVisuals);
+        }
+        animateVisuals();
+
+    </script>
+</body>
+</html>
