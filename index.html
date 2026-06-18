@@ -103,21 +103,38 @@
             align-items: center;
         }
 
-        /* Horizontal Scroll Container */
-        .projects-wrapper {
-            width: 400vw; /* 4 panels * 100vw */
-            height: 100vh;
-            display: flex;
-            flex-wrap: nowrap;
+        /* Responsive Project Container Logic */
+        @media (min-width: 768px) {
+            .projects-wrapper {
+                width: 400vw; /* 4 panels * 100vw */
+                height: 100vh;
+                display: flex;
+                flex-wrap: nowrap;
+            }
+            .project-panel {
+                width: 100vw;
+                height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 2rem;
+            }
         }
-
-        .project-panel {
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
+        
+        @media (max-width: 767px) {
+            .projects-wrapper {
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+            }
+            .project-panel {
+                width: 100%;
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 2rem 1rem;
+            }
         }
 
         /* Timeline specific */
@@ -231,11 +248,11 @@
             </div>
         </section>
 
-        <!-- About Section (Pinned Layout) -->
+        <!-- About Section -->
         <section id="about" class="relative bg-slate-900/80 border-y border-slate-800">
             <div class="about-container max-w-7xl mx-auto px-6 py-24 flex flex-col md:flex-row gap-12">
                 
-                <!-- Left Side: Pinned Canvas -->
+                <!-- Left Side: Canvas -->
                 <div class="w-full md:w-1/2 h-[50vh] md:h-[80vh] relative about-image-wrapper rounded-2xl overflow-hidden shadow-2xl shadow-cyan-500/10 border border-slate-700 bg-slate-950">
                     <canvas id="architectureCanvas" class="absolute inset-0 w-full h-full"></canvas>
                     <div class="absolute inset-0 bg-gradient-to-tr from-slate-900/80 via-transparent to-slate-900/80 z-10 pointer-events-none"></div>
@@ -247,7 +264,7 @@
                     </div>
                 </div>
 
-                <!-- Right Side: Scrolling Text -->
+                <!-- Right Side: Text -->
                 <div class="w-full md:w-1/2 py-10 md:py-20 about-text-content">
                     <h2 class="text-3xl md:text-5xl font-bold mb-8">The <span class="text-cyan-400">Architecture</span></h2>
                     
@@ -375,17 +392,18 @@
             </div>
         </section>
 
-        <!-- Projects (Horizontal Scroll) -->
+        <!-- Projects -->
+        <!-- Note: h-screen modified to min-h-screen md:h-screen for mobile stacking -->
         <section id="projects" class="overflow-hidden bg-slate-900/50 border-t border-slate-800">
-            <!-- This container will be pinned by GSAP while the inner wrapper slides horizontally -->
-            <div id="projects-container" class="h-screen w-full relative">
+            <div id="projects-container" class="min-h-screen md:h-screen w-full relative">
                 
                 <div class="absolute top-20 left-10 md:left-20 z-20">
                     <h2 class="text-3xl md:text-5xl font-bold">University <span class="text-cyan-400">Projects</span></h2>
-                    <p class="font-mono text-slate-400 mt-2">Scroll horizontally >></p>
+                    <p class="font-mono text-slate-400 mt-2 hidden md:block">Scroll horizontally >></p>
+                    <p class="font-mono text-slate-400 mt-2 block md:hidden">Scroll down v</p>
                 </div>
 
-                <div class="projects-wrapper">
+                <div class="projects-wrapper pt-32 md:pt-0">
                     
                     <!-- Panel 1 -->
                     <div class="project-panel">
@@ -476,8 +494,8 @@
                     </div>
 
                     <!-- End Buffer Panel -->
-                    <div class="project-panel" style="width: 100vw;">
-                        <div class="text-center">
+                    <div class="project-panel">
+                        <div class="text-center w-full">
                             <i class='bx bx-check-shield text-7xl text-cyan-500 mb-6'></i>
                             <h3 class="text-3xl font-bold text-white">All systems operational.</h3>
                             <p class="text-slate-400 mt-4">Continue scrolling for credentials.</p>
@@ -754,138 +772,106 @@
         // --- 2. GSAP Scrollytelling Animations ---
         gsap.registerPlugin(ScrollTrigger, TextPlugin);
 
+        // Responsive ScrollTrigger logic using matchMedia
+        let mm = gsap.matchMedia();
+
+        // -------------------------
+        // ALL SCREENS (GLOBAL GSAP)
+        // -------------------------
+
         // Hero Typewriter Animation
         const typewriterContent = "Hi, I'm Kiran Kunchala. Infrastructure specialist with 4+ years of experience bridging traditional enterprise networking and automated cloud architectures.";
         
         // Blink cursor infinitely
-        gsap.to("#cursor", {
-            opacity: 0,
-            ease: "power2.inOut",
-            repeat: -1,
-            yoyo: true,
-            duration: 0.4
-        });
+        gsap.to("#cursor", { opacity: 0, ease: "power2.inOut", repeat: -1, yoyo: true, duration: 0.4 });
 
         // Type out text, wait, erase, and repeat
         const tl = gsap.timeline({ repeat: -1 });
-        
-        tl.to("#typewriter-text", {
-            text: {
-                value: typewriterContent,
-                delimiter: ""
-            },
-            duration: 3.5, 
-            ease: "none",
-            delay: 1
-        })
-        .to({}, {duration: 4}) // Wait for 4 seconds
-        .set("#typewriter-text", {  // Use .set for instant change
-            text: {
-                value: "",
-                delimiter: ""
-            }
-        });
+        tl.to("#typewriter-text", { text: { value: typewriterContent, delimiter: "" }, duration: 3.5, ease: "none", delay: 1 })
+          .to({}, {duration: 4})
+          .set("#typewriter-text", { text: { value: "", delimiter: "" } });
 
         // Hero initial load animation
-        gsap.to(".hero-anim", {
-            y: 0,
-            opacity: 1,
-            duration: 1,
-            stagger: 0.2,
-            ease: "power3.out"
-        });
-
-        // About Section: Pin the image while text scrolls
-        ScrollTrigger.create({
-            trigger: ".about-container",
-            start: "top 10%",
-            end: "bottom 80%",
-            pin: ".about-image-wrapper",
-        });
+        gsap.to(".hero-anim", { y: 0, opacity: 1, duration: 1, stagger: 0.2, ease: "power3.out" });
 
         // About text fade in as you scroll
         gsap.utils.toArray(".about-block").forEach(block => {
             gsap.to(block, {
-                y: 0,
-                opacity: 1,
-                scrollTrigger: {
-                    trigger: block,
-                    start: "top 80%",
-                    end: "top 50%",
-                    scrub: 1
-                }
+                y: 0, opacity: 1,
+                scrollTrigger: { trigger: block, start: "top 80%", end: "top 50%", scrub: 1 }
             });
         });
 
         // Experience Timeline: The node traveling down
         gsap.to(".timeline-progress", {
-            height: "100%",
-            ease: "none",
-            scrollTrigger: {
-                trigger: ".experience-section",
-                start: "top center",
-                end: "bottom center",
-                scrub: true
-            }
+            height: "100%", ease: "none",
+            scrollTrigger: { trigger: ".experience-section", start: "top center", end: "bottom center", scrub: true }
         });
 
         // Experience items fade in and dots light up
         gsap.utils.toArray(".timeline-item").forEach(item => {
             let dot = item.querySelector(".node-dot");
-            
-            // Fade in item
             gsap.to(item, {
-                x: 0,
-                opacity: 1,
-                scrollTrigger: {
-                    trigger: item,
-                    start: "top 70%",
-                    end: "top 40%",
-                    scrub: 1
-                }
+                x: 0, opacity: 1,
+                scrollTrigger: { trigger: item, start: "top 70%", end: "top 40%", scrub: 1 }
             });
-
-            // Light up dot if it has the node-dot class (first one is already lit)
             if(dot) {
                 gsap.to(dot, {
-                    borderColor: "#06b6d4",
-                    boxShadow: "0 0 15px rgba(6,182,212,0.8)",
-                    scrollTrigger: {
-                        trigger: item,
-                        start: "top 50%", // When line hits it
-                        toggleActions: "play none none reverse"
-                    }
+                    borderColor: "#06b6d4", boxShadow: "0 0 15px rgba(6,182,212,0.8)",
+                    scrollTrigger: { trigger: item, start: "top 50%", toggleActions: "play none none reverse" }
                 });
-            }
-        });
-
-        // Projects: Horizontal Scroll
-        let projectSections = gsap.utils.toArray(".project-panel");
-        let projectWrapper = document.querySelector(".projects-wrapper");
-        
-        gsap.to(projectSections, {
-            xPercent: -100 * (projectSections.length - 1),
-            ease: "none",
-            scrollTrigger: {
-                trigger: "#projects-container",
-                pin: true,
-                scrub: 1,
-                snap: 1 / (projectSections.length - 1),
-                end: () => "+=" + projectWrapper.offsetWidth
             }
         });
 
         // Education section fade up
         gsap.utils.toArray(".edu-anim").forEach(card => {
             gsap.to(card, {
-                y: 0,
-                opacity: 1,
-                duration: 0.8,
-                ease: "power3.out",
+                y: 0, opacity: 1, duration: 0.8, ease: "power3.out",
+                scrollTrigger: { trigger: card, start: "top 85%" }
+            });
+        });
+
+        // -------------------------
+        // DESKTOP ONLY ANIMATIONS
+        // -------------------------
+        mm.add("(min-width: 768px)", () => {
+            // About Section: Pin the image while text scrolls
+            ScrollTrigger.create({
+                trigger: ".about-container",
+                start: "top 10%",
+                end: "bottom 80%",
+                pin: ".about-image-wrapper",
+            });
+
+            // Projects: Horizontal Scroll
+            let projectSections = gsap.utils.toArray(".project-panel");
+            let projectWrapper = document.querySelector(".projects-wrapper");
+            
+            gsap.to(projectSections, {
+                xPercent: -100 * (projectSections.length - 1),
+                ease: "none",
                 scrollTrigger: {
-                    trigger: card,
-                    start: "top 85%",
+                    trigger: "#projects-container",
+                    pin: true,
+                    scrub: 1,
+                    snap: 1 / (projectSections.length - 1),
+                    end: () => "+=" + projectWrapper.offsetWidth
                 }
+            });
+        });
+
+        // -------------------------
+        // MOBILE ONLY ANIMATIONS
+        // -------------------------
+        mm.add("(max-width: 767px)", () => {
+            // Fade up projects individually instead of horizontal scrolling
+            gsap.utils.toArray(".project-panel").forEach(panel => {
+                gsap.from(panel, {
+                    opacity: 0,
+                    y: 50,
+                    duration: 0.8,
+                    scrollTrigger: { trigger: panel, start: "top 85%" }
+                });
             });
         });
 
