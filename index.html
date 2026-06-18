@@ -71,7 +71,7 @@
             width: 100vw;
             height: 100vh;
             z-index: 0;
-            opacity: 0.4;
+            opacity: 0.8; /* Increased from 0.4 for better visibility */
             pointer-events: auto; /* Allow mouse interaction */
         }
 
@@ -253,11 +253,17 @@
             <div class="about-container max-w-7xl mx-auto px-6 py-24 flex flex-col md:flex-row gap-12">
                 
                 <!-- Left Side: Canvas -->
-                <div class="w-full md:w-1/2 h-[50vh] md:h-[80vh] relative about-image-wrapper rounded-2xl overflow-hidden shadow-2xl shadow-cyan-500/10 border border-slate-700 bg-slate-950">
-                    <canvas id="architectureCanvas" class="absolute inset-0 w-full h-full"></canvas>
+                <div class="w-full md:w-1/2 h-[50vh] md:h-[80vh] relative about-image-wrapper rounded-2xl overflow-hidden shadow-2xl shadow-cyan-500/10 border border-slate-700 bg-slate-950 group">
+                    <canvas id="globeCanvas" class="absolute inset-0 w-full h-full cursor-crosshair"></canvas>
                     <div class="absolute inset-0 bg-gradient-to-tr from-slate-900/80 via-transparent to-slate-900/80 z-10 pointer-events-none"></div>
                     
-                    <div class="absolute bottom-6 left-6 z-20 glass-panel p-4 rounded-xl border border-white/10">
+                    <!-- Interactive Indicator -->
+                    <div class="absolute top-6 right-6 z-20 px-3 py-1.5 rounded-full bg-slate-900/60 border border-cyan-500/30 backdrop-blur-md flex items-center gap-2 pointer-events-none transition-opacity duration-300 group-hover:opacity-20">
+                        <i class='bx bx-mouse-alt text-cyan-400 animate-bounce'></i>
+                        <span class="text-xs font-mono text-cyan-400">Hover to rotate</span>
+                    </div>
+
+                    <div class="absolute bottom-6 left-6 z-20 glass-panel p-4 rounded-xl border border-white/10 pointer-events-none">
                         <p class="font-mono text-cyan-400 text-sm mb-1">Current Status</p>
                         <p class="text-white font-medium"><i class='bx bx-radar animate-spin mr-2'></i>Actively Monitoring</p>
                         <p class="text-slate-400 text-xs mt-1">Salt Lake City, Utah Server Hub</p>
@@ -409,13 +415,13 @@
                     <div class="project-panel">
                         <div class="max-w-6xl w-full flex flex-col lg:flex-row gap-12 items-center">
                             <div class="w-full lg:w-1/2">
-                                <!-- GLOBE ANIMATION CONTAINER -->
+                                <!-- ARCHITECTURE ANIMATION CONTAINER -->
                                 <div class="w-full h-[300px] lg:h-[400px] rounded-xl shadow-2xl shadow-cyan-500/20 border border-slate-700 bg-slate-950 relative overflow-hidden flex items-center justify-center">
-                                    <canvas id="globeCanvas" class="absolute inset-0 w-full h-full"></canvas>
+                                    <canvas id="architectureCanvas" class="absolute inset-0 w-full h-full"></canvas>
                                     <div class="absolute bottom-4 left-4 z-10">
                                         <div class="flex items-center gap-2">
                                             <div class="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></div>
-                                            <span class="text-cyan-500 font-mono text-xs">Global Node Active</span>
+                                            <span class="text-cyan-500 font-mono text-xs">VPC Topology Active</span>
                                         </div>
                                     </div>
                                 </div>
@@ -692,6 +698,11 @@
             mouse.y = e.clientY;
         });
 
+        document.addEventListener('mouseleave', () => {
+            mouse.x = null;
+            mouse.y = null;
+        });
+
         class Particle {
             constructor() {
                 this.x = Math.random() * width;
@@ -699,6 +710,7 @@
                 this.vx = (Math.random() - 0.5) * 1;
                 this.vy = (Math.random() - 0.5) * 1;
                 this.radius = Math.random() * 2 + 1;
+                this.pulse = Math.random() * Math.PI * 2;
             }
 
             update() {
@@ -708,23 +720,21 @@
                 // Bounce off edges
                 if (this.x < 0 || this.x > width) this.vx *= -1;
                 if (this.y < 0 || this.y > height) this.vy *= -1;
-
-                // Mouse interaction (repel)
-                if (mouse.x != null) {
-                    let dx = mouse.x - this.x;
-                    let dy = mouse.y - this.y;
-                    let distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance < 100) {
-                        this.x -= dx * 0.05;
-                        this.y -= dy * 0.05;
-                    }
-                }
             }
 
             draw() {
+                this.pulse += 0.05;
+                let r = this.radius + Math.sin(this.pulse) * 1;
+
                 ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.arc(this.x, this.y, r, 0, Math.PI * 2);
                 ctx.fillStyle = '#06b6d4';
+                ctx.fill();
+
+                // Outer glow
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, r + 4, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(6, 182, 212, ${0.2 + Math.sin(this.pulse)*0.15})`; // Increased glow opacity
                 ctx.fill();
             }
         }
@@ -732,7 +742,7 @@
         function createParticles() {
             particles = [];
             // Amount of particles based on screen size
-            let numParticles = Math.floor((width * height) / 15000);
+            let numParticles = Math.floor((width * height) / 10000); // Increased density from 15000 to 10000
             for (let i = 0; i < numParticles; i++) {
                 particles.push(new Particle());
             }
@@ -753,14 +763,51 @@
 
                     if (distance < connectionDistance) {
                         ctx.beginPath();
-                        ctx.strokeStyle = `rgba(6, 182, 212, ${1 - distance/connectionDistance})`;
-                        ctx.lineWidth = 1;
+                        ctx.strokeStyle = `rgba(6, 182, 212, ${(1 - distance/connectionDistance) * 0.8})`; // Boosted line visibility
+                        ctx.lineWidth = 1.5; // Thicker lines
                         ctx.moveTo(particles[i].x, particles[i].y);
                         ctx.lineTo(particles[j].x, particles[j].y);
                         ctx.stroke();
                     }
                 }
             }
+
+            // --- Interactive Diagnostic Scanner (Mouse Hover) for Global Background ---
+            if(mouse.x !== null && mouse.y !== null) {
+                // Draw Radar Ring
+                ctx.beginPath();
+                ctx.arc(mouse.x, mouse.y, 80, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(34, 211, 238, 0.6)'; // Increased radar ring opacity
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                
+                // Draw Inner Core
+                ctx.beginPath();
+                ctx.arc(mouse.x, mouse.y, 40, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(34, 211, 238, 0.15)'; // Increased core opacity
+                ctx.fill();
+
+                // Ping nearby nodes
+                particles.forEach(node => {
+                    let dx = mouse.x - node.x;
+                    let dy = mouse.y - node.y;
+                    let dist = Math.sqrt(dx*dx + dy*dy);
+                    
+                    if(dist < 150) {
+                        // Draw Ping line
+                        ctx.beginPath();
+                        ctx.moveTo(mouse.x, mouse.y);
+                        ctx.lineTo(node.x, node.y);
+                        ctx.strokeStyle = `rgba(34, 211, 238, ${1 - dist/150})`;
+                        ctx.lineWidth = 2; // Thicker ping line
+                        ctx.stroke();
+                        
+                        // Force node to pulse brightly (simulating a response)
+                        node.pulse = Math.PI / 2; 
+                    }
+                });
+            }
+
             requestAnimationFrame(animateCanvas);
         }
 
@@ -885,13 +932,44 @@
             return { w: rect.width, h: rect.height };
         }
 
-        // --- Project 1: Rotating Globe ---
+        // --- Project 1: Rotating Globe (NOW INTERACTIVE) ---
         const globeCanvas = document.getElementById('globeCanvas');
         const gCtx = globeCanvas.getContext('2d');
         let globeNodes = [];
         const numGlobeNodes = 150;
         let globeRotX = 0;
         let globeRotY = 0;
+        
+        // Interactive Mouse variables for Globe
+        let targetGlobeRotX = 0;
+        let targetGlobeRotY = 0;
+        let isHoveringGlobe = false;
+        let globeLastX = null;
+        let globeLastY = null;
+
+        // Globe Mouse Events - Hover to interact
+        globeCanvas.addEventListener('mouseenter', (e) => {
+            isHoveringGlobe = true;
+            globeLastX = e.clientX;
+            globeLastY = e.clientY;
+        });
+
+        globeCanvas.addEventListener('mouseleave', () => {
+            isHoveringGlobe = false;
+            globeLastX = null;
+            globeLastY = null;
+        });
+
+        globeCanvas.addEventListener('mousemove', (e) => {
+            if(isHoveringGlobe && globeLastX !== null && globeLastY !== null) {
+                let dx = e.clientX - globeLastX;
+                let dy = e.clientY - globeLastY;
+                targetGlobeRotY += dx * 0.005;
+                targetGlobeRotX += dy * 0.005;
+                globeLastX = e.clientX;
+                globeLastY = e.clientY;
+            }
+        });
 
         // Fibonacci sphere distribution for even point spacing
         for(let i=0; i<numGlobeNodes; i++) {
@@ -913,8 +991,15 @@
             let cx = w / 2;
             let cy = h / 2;
 
-            globeRotY += 0.005;
-            globeRotX += 0.002;
+            // Auto-rotate if not hovering
+            if (!isHoveringGlobe) {
+                targetGlobeRotY += 0.005;
+                targetGlobeRotX += 0.002;
+            }
+
+            // Smooth interpolation for rotation
+            globeRotX += (targetGlobeRotX - globeRotX) * 0.1;
+            globeRotY += (targetGlobeRotY - globeRotY) * 0.1;
 
             let projectedNodes = [];
 
@@ -1089,12 +1174,25 @@
             }
         }
 
-        // --- Architecture Section: Network Data Flow ---
+        // --- Architecture Section: Network Data Flow (NOW INTERACTIVE) ---
         const archCanvas = document.getElementById('architectureCanvas');
         const aCtx = archCanvas.getContext('2d');
         let archNodes = [];
         let archLinks = [];
         let archPackets = [];
+        
+        // Interactive Mouse Scanner
+        let archMouse = { x: null, y: null };
+        
+        archCanvas.addEventListener('mousemove', (e) => {
+            const rect = archCanvas.getBoundingClientRect();
+            archMouse.x = e.clientX - rect.left;
+            archMouse.y = e.clientY - rect.top;
+        });
+        archCanvas.addEventListener('mouseleave', () => {
+            archMouse.x = null;
+            archMouse.y = null;
+        });
 
         function initArch() {
             if(!archCanvas) return;
@@ -1199,6 +1297,42 @@
                 aCtx.shadowColor = '#22d3ee'; // cyan glow
                 aCtx.fill();
                 aCtx.shadowBlur = 0; // reset for other elements
+            }
+            
+            // --- Interactive Diagnostic Scanner (Mouse Hover) ---
+            if(archMouse.x !== null && archMouse.y !== null) {
+                // Draw Radar Ring
+                aCtx.beginPath();
+                aCtx.arc(archMouse.x, archMouse.y, 60, 0, Math.PI * 2);
+                aCtx.strokeStyle = 'rgba(34, 211, 238, 0.3)';
+                aCtx.lineWidth = 1;
+                aCtx.stroke();
+                
+                // Draw Inner Core
+                aCtx.beginPath();
+                aCtx.arc(archMouse.x, archMouse.y, 30, 0, Math.PI * 2);
+                aCtx.fillStyle = 'rgba(34, 211, 238, 0.05)';
+                aCtx.fill();
+
+                // Ping nearby nodes
+                archNodes.forEach(node => {
+                    let dx = archMouse.x - node.x;
+                    let dy = archMouse.y - node.y;
+                    let dist = Math.sqrt(dx*dx + dy*dy);
+                    
+                    if(dist < 120) {
+                        // Draw Ping line
+                        aCtx.beginPath();
+                        aCtx.moveTo(archMouse.x, archMouse.y);
+                        aCtx.lineTo(node.x, node.y);
+                        aCtx.strokeStyle = `rgba(34, 211, 238, ${1 - dist/120})`;
+                        aCtx.lineWidth = 1.5;
+                        aCtx.stroke();
+                        
+                        // Force node to pulse brightly (simulating a response)
+                        node.pulse = Math.PI / 2; 
+                    }
+                });
             }
         }
 
